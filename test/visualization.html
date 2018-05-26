@@ -1,0 +1,73 @@
+<head>
+  <script src="../vendors/require.min.js"></script>
+  <style>
+    #force {
+      height: 80vh;
+      /*width: 100%;*/
+      transition: margin-right .5s;
+      padding: 16px;
+      /*padding-bottom: 30px;*/
+      /*overflow-x: scroll;*/
+    }
+    .node circle {
+      cursor: pointer;
+      stroke: #3182bd;
+      stroke-width: 1.5px;
+    }
+    .node text {
+      font: 10px sans-serif;
+      pointer-events: none;
+      text-anchor: middle;
+    }
+
+    .link text {
+      font: 10px sans-serif;
+      pointer-events: none;
+      text-anchor: middle;
+    }
+
+    .link line {
+      fill: none;
+      stroke: #9ecae1;
+      stroke-width: 1.5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="force"></div>
+  <script>
+    require.config({
+      paths: {
+        "d3": "../vendors/d3.v4.min",
+        "gravis": "../js/gravis",
+      }
+    });
+  </script>
+  <script>
+    require(["gravis"], (gravis) => {
+
+      let a = {id: 0};
+      let b = {id: 1};
+      let c = {id: 2};
+      let d = {id: 3};
+      let r = {id: 0, source: a, target: b};
+      let r2 = {id:1, source: a, target: c};
+
+      let w = 500; let h = 500;
+      graph = new gravis.Graph();
+      vis = new gravis.Vis(graph, w, h);
+
+      vis.init();
+
+      graph.add(r);
+      vis.update();
+
+      setTimeout(() => {
+        graph.add(r2);
+        graph.add(d);
+        vis.update();
+      }, 1000);
+
+    });
+  </script>
+</body>
