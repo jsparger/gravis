@@ -56,8 +56,7 @@
       let w = 500; let h = 500;
       graph = new gravis.Graph();
       vis = new gravis.Vis(graph, w, h);
-
-      vis.init();
+      vis.dispatch.on("click", function (d) {console.log("Got click event in visualization.html", this, d);});
 
       graph.add(r);
       vis.update();
@@ -67,6 +66,19 @@
         graph.add(d);
         vis.update();
       }, 1000);
+
+      setTimeout(() => {
+        graph.remove(r2);
+        graph.remove(d);
+        vis.update();
+      }, 2000);
+
+      setTimeout(() => {
+        graph.add(r2);
+        graph.add(d);
+        graph.add({id: 2, source: d, target: c})
+        vis.update();
+      }, 3000);
 
     });
   </script>

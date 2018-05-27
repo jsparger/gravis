@@ -55,16 +55,20 @@ define(["d3"], (d3) => {
         .force("link", d3.forceLink().distance(50).strength(1))
         // .force("center", d3.forceCenter(this._width/2, this._height/2))
         .on("tick", this.tick.bind(this));
+      this._events = ["click", "dblclick", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseover", "mouseout", "mouseup"];
+      this.dispatch = d3.dispatch(...this._events);
+      this._init();
     }
 
-    init() {
+    _init() {
       // create svg
       this._svg = d3.select("#force").append("svg")
         .attr("id", "forcesvg")
         .attr("preserveAspectRatio", "none")
         .attr("viewBox", `0 0 ${this._width} ${this._height}`)
         .classed("svg-content", true);
-        // .on('mousedown', this.mousedown.bind(this));
+
+      this._make_interactive(this._svg);
 
       // create groups in the svg for links and nodes
       // do links first so links will be drawn underneath nodes.
@@ -85,8 +89,9 @@ define(["d3"], (d3) => {
     _update_selection(s, x, onEnter) {
       s = s.data(x, get_id);
       s.exit().remove();
-      return onEnter(s.enter()).merge(s);
-      // return s.enter().merge(s);
+      s = onEnter(s.enter()).merge(s);
+      this._make_interactive(s);
+      return s;
     }
 
     _process_node_enter(s) {
@@ -99,6 +104,13 @@ define(["d3"], (d3) => {
       let group = s.append("g").attr("class","link");
       group.append("line");
       return group;
+    }
+
+    _make_interactive(s) {
+      let dispatch = this.dispatch;
+      this._events.map((event) => {
+        s.on(event, function (d) {console.log(event); d3.event.stopPropagation(); dispatch.call(event, this, d)} );
+      });
     }
 
     restart_simulation() {
@@ -131,6 +143,13 @@ define(["d3"], (d3) => {
         .attr("x2", function(d) { return this._graph._nodes[d.target.id].x; }.bind(this))
         .attr("y2", function(d) { return this._graph._nodes[d.target.id].y; }.bind(this));
     }
+  }
+
+  class Gestures {
+    // create node
+    // delete node
+    // create relationship
+    // delete relationship
   }
 
   return {
