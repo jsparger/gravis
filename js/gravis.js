@@ -145,7 +145,74 @@ define(["d3"], (d3) => {
     }
   }
 
-  class Gestures {
+  class Interact {
+    constructor(vis) {
+      this._vis = vis;
+      this.events = ["select", "deselect"]
+      this.dispatch = d3.dispatch(...this.events);
+      this.selected = null;
+      this._vis.dispatch.on("click.gesture", this._click_closure());
+    }
+
+    _click_closure() {
+      let self = this;
+      return function (d) {
+        if (is_valid_entity(d)) {
+          self.dispatch.call("select", this, d);
+        }
+        else {
+          self.dispatch.call("deselect");
+        }
+      };
+    }
+
+  }
+
+  function colorize(s, color) {
+    let d = s.data()[0];
+    if (is_node(d)) s.style("fill", color);
+    if (is_relationship(d)); s.selectAll("line").style("stroke", color);
+  }
+
+  class Actions {
+    constructor(int) {
+      this._int = int;
+    }
+
+    highlight_selected_entity() {
+      let dispatch = this._int.dispatch;
+      let selected = null;
+      let name = "highlight_selected_node";
+
+      dispatch.on(`select.${name}`, function (d) {
+        dispatch.call("deselect");
+        colorize(d3.select(this), "lime")
+        selected = this;
+      });
+
+      dispatch.on(`deselect.${name}`, function () {
+        colorize(d3.select(selected), null)
+        selected = null;
+      });
+    }
+
+    highlight_hover_entity() {
+      let dispatch = this._int._vis.dispatch;
+      let selected = null;
+      let name = "highlight_hover_entity";
+
+      dispatch.on(`mouseenter.${name}`, function (d) {
+        dispatch.call("mouseleave");
+        colorize(d3.select(this), "yellow");
+        selected = this;
+      });
+
+      dispatch.on(`mouseleave.${name}`, function (d) {
+        colorize(d3.select(selected), null);
+        selected = null;
+      });
+
+    }
     // create node
     // delete node
     // create relationship
@@ -155,6 +222,8 @@ define(["d3"], (d3) => {
   return {
     "Graph": Graph,
     "Vis": Vis,
+    "Interact": Interact,
+    "Actions": Actions,
   };
 
 });
