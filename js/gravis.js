@@ -168,10 +168,39 @@ define(["d3"], (d3) => {
 
   }
 
-  function colorize(s, color) {
+  function colorize(element) {
+    if (!element) return;
+    let s = d3.select(element);
     let d = s.data()[0];
+    let color = choose_color(JSON.parse(s.attr("status")));
     if (is_node(d)) s.style("fill", color);
     if (is_relationship(d)); s.selectAll("line").style("stroke", color);
+  }
+
+  function choose_color(status) {
+    if (!status) {
+      return null;
+    }
+    else if ("select" in status) {
+      return "lime";
+    }
+    else if ("hover" in status) {
+      return "yellow";
+    }
+  }
+
+  function add_status(element, code, add=true) {
+    if (!element) return;
+    let s = d3.select(element);
+    let status = JSON.parse(s.attr("status"));
+    if (!status) status = {};
+    if (add) {
+      status[code] = true;
+    }
+    else {
+      delete status[code];
+    }
+    s.attr("status",JSON.stringify(status));
   }
 
   class Actions {
@@ -181,34 +210,38 @@ define(["d3"], (d3) => {
 
     highlight_selected_entity() {
       let dispatch = this._int.dispatch;
-      let selected = null;
       let name = "highlight_selected_node";
+      let selected = null;
 
       dispatch.on(`select.${name}`, function (d) {
         dispatch.call("deselect");
-        colorize(d3.select(this), "lime")
+        add_status(this, "select")
+        colorize(this)
         selected = this;
       });
 
       dispatch.on(`deselect.${name}`, function () {
-        colorize(d3.select(selected), null)
+        add_status(selected, "select", null)
+        colorize(selected);
         selected = null;
       });
     }
 
     highlight_hover_entity() {
       let dispatch = this._int._vis.dispatch;
-      let selected = null;
       let name = "highlight_hover_entity";
+      let selected = null;
 
       dispatch.on(`mouseenter.${name}`, function (d) {
         dispatch.call("mouseleave");
-        colorize(d3.select(this), "yellow");
+        add_status(this, "hover")
+        colorize(this);
         selected = this;
       });
 
       dispatch.on(`mouseleave.${name}`, function (d) {
-        colorize(d3.select(selected), null);
+        add_status(this, "hover", null)
+        colorize(this);
         selected = null;
       });
 
