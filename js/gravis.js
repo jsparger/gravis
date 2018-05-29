@@ -173,8 +173,12 @@ define(["d3"], (d3) => {
     let s = d3.select(element);
     let d = s.data()[0];
     let color = choose_color(JSON.parse(s.attr("status")));
-    if (is_node(d)) s.style("fill", color);
-    if (is_relationship(d)); s.selectAll("line").style("stroke", color);
+    if (is_node(d)) {
+      s.style("fill", color);
+    }
+    else if (is_relationship(d)) {
+      s.selectAll("line").style("stroke", color);
+    }
   }
 
   function choose_color(status) {
