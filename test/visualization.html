@@ -53,7 +53,7 @@
       let r = {id: 0, source: a, target: b};
       let r2 = {id:1, source: a, target: c};
 
-      let w = 500; let h = 500;
+      let w = 500; let h = 250;
       graph = new gravis.Graph();
       vis = new gravis.Vis(graph, w, h);
       vis.dispatch.on("click.visualize", function (d) {console.log("Got click event in visualization.html", this, d);});
@@ -63,6 +63,7 @@
       act = new gravis.Actions(int);
       act.highlight_selected_entity();
       act.highlight_hover_entity();
+      act.create_node_on_shift_click();
 
 
       graph.add(r);

@@ -53,7 +53,7 @@ define(["d3"], (d3) => {
         .velocityDecay(0.1)
         .force("charge", d3.forceManyBody().strength(-3))
         .force("link", d3.forceLink().distance(50).strength(1))
-        // .force("center", d3.forceCenter(this._width/2, this._height/2))
+        .force("center", d3.forceCenter(this._width/2, this._height/2))
         .on("tick", this.tick.bind(this));
       this._events = ["click", "dblclick", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseover", "mouseout", "mouseup"];
       this.dispatch = d3.dispatch(...this._events);
@@ -66,7 +66,8 @@ define(["d3"], (d3) => {
         .attr("id", "forcesvg")
         .attr("preserveAspectRatio", "none")
         .attr("viewBox", `0 0 ${this._width} ${this._height}`)
-        .classed("svg-content", true);
+        .classed("svg-content", true)
+        .style("cursor", "crosshair");
 
       this._make_interactive(this._svg);
 
@@ -124,7 +125,7 @@ define(["d3"], (d3) => {
       // as computed by the force layout.
       let bound = (x, limit, pad) => {
         x = (x < pad) ? pad : x;
-        x = (x > limit-pad) ? limit-pad : x;
+        x = (x > (limit-pad)) ? limit-pad : x;
         return x;
       };
 
@@ -133,7 +134,7 @@ define(["d3"], (d3) => {
         d.x = bound(d.x, this._width, pad);
         d.y = bound(d.y, this._height, pad);
         return "translate(" + d.x + "," + d.y + ")";
-      });
+      }.bind(this));
 
       // update the endpoints of the lines based on their source and end node
       // locations.
@@ -148,7 +149,7 @@ define(["d3"], (d3) => {
   class Interact {
     constructor(vis) {
       this._vis = vis;
-      this.events = ["select", "deselect"]
+      this.events = ["select", "deselect", "create"];
       this.dispatch = d3.dispatch(...this.events);
       this.selected = null;
       this._vis.dispatch.on("click.gesture", this._click_closure());
@@ -157,7 +158,11 @@ define(["d3"], (d3) => {
     _click_closure() {
       let self = this;
       return function (d) {
-        if (is_valid_entity(d)) {
+        if (d3.event.shiftKey) {
+          console.log("shift click!");
+          self.dispatch.call("create", this, d);
+        }
+        else if (is_valid_entity(d)) {
           self.dispatch.call("select", this, d);
         }
         else {
@@ -166,6 +171,13 @@ define(["d3"], (d3) => {
       };
     }
 
+  }
+
+  // from https://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
+  function uuidv4() {
+    return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    )
   }
 
   function colorize(element) {
@@ -203,8 +215,22 @@ define(["d3"], (d3) => {
     }
     else {
       delete status[code];
+      if (Object.keys(status).length === 0) {
+        s.attr("status", null);
+        return;
+      }
     }
     s.attr("status",JSON.stringify(status));
+  }
+
+  function find_selected(svg) {
+    let selected = null;
+    d3.selectAll("[status]").each( function (d) {
+      if ("select" in JSON.parse(d3.select(this).attr("status"))) {
+        selected = this;
+      }
+    });
+    return selected;
   }
 
   class Actions {
@@ -234,21 +260,52 @@ define(["d3"], (d3) => {
     highlight_hover_entity() {
       let dispatch = this._int._vis.dispatch;
       let name = "highlight_hover_entity";
-      let selected = null;
+      let hovered = null;
 
       dispatch.on(`mouseenter.${name}`, function (d) {
         dispatch.call("mouseleave");
-        add_status(this, "hover")
+        if (is_valid_entity(d)) {
+          add_status(this, "hover")
+        }
         colorize(this);
-        selected = this;
+        hovered = this;
       });
 
       dispatch.on(`mouseleave.${name}`, function (d) {
         add_status(this, "hover", null)
         colorize(this);
-        selected = null;
+        hovered = null;
       });
+    }
 
+    create_node_on_shift_click() {
+      let self = this;
+      let dispatch = this._int.dispatch;
+      let name = "create_node_on_shift_click";
+      let vis = this._int._vis;
+
+      dispatch.on(`create.${name}`, function (d) {
+        let c = d3.mouse(this);
+        let x = null;
+        let sd = d3.select(find_selected()).data()[0];
+
+        if (!sd) {
+          console.log("create floating", d);
+          x = {id: uuidv4(), x: c[0], y: c[1]}
+        }
+        else {
+          if (is_node(d) && d !== sd) {
+            console.log("create link");
+            x = {id: uuidv4(), source: sd, target: d};
+          }
+          else {
+            console.log("create linked node");
+            x = {id: uuidv4(), source: sd, target: {id: uuidv4(), x: c[0], y: c[1]}};
+          }
+        }
+        vis._graph.add(x);
+        vis.update();
+      });
     }
     // create node
     // delete node
