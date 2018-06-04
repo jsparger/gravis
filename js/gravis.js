@@ -19,13 +19,17 @@ define(["d3"], (d3) => {
       this._links = {};
     }
 
-    add(x) {
+    add(x, link=null) {
       if (is_node(x)) {
         this._nodes[x.id] = x;
+        x.links = x.links ? x.links : [];
+        if (link) {
+          x.links.push(link);
+        }
       }
       else if (is_relationship(x)) {
-        this.add(x.source);
-        this.add(x.target);
+        this.add(x.source, x);
+        this.add(x.target, x);
         this._links[x.id] = x;
       }
     }
@@ -33,6 +37,9 @@ define(["d3"], (d3) => {
     remove(x) {
       if (is_node(x)) {
         delete this._nodes[x.id];
+        for (let link of x.links) {
+          this.remove(link);
+        }
       }
       else if (is_relationship(x)) {
         delete this._links[x.id];
@@ -50,12 +57,12 @@ define(["d3"], (d3) => {
       this._width = width;
       this._height = height;
       this._sim = d3.forceSimulation()
-        .velocityDecay(0.1)
-        .force("charge", d3.forceManyBody().strength(-3))
+        // .velocityDecay(0.1)
+        .force("charge", d3.forceManyBody().strength(-30))
         .force("link", d3.forceLink().distance(50).strength(1))
         .force("center", d3.forceCenter(this._width/2, this._height/2))
         .on("tick", this.tick.bind(this));
-      this._events = ["click", "dblclick", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseover", "mouseout", "mouseup"];
+      this._events = ["click", "dblclick", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseover", "mouseout", "mouseup", "keydown"];
       this.dispatch = d3.dispatch(...this._events);
       this._init();
     }
@@ -70,6 +77,8 @@ define(["d3"], (d3) => {
         .style("cursor", "crosshair");
 
       this._make_interactive(this._svg);
+
+      this._make_interactive(d3.select("body"));
 
       // create groups in the svg for links and nodes
       // do links first so links will be drawn underneath nodes.
@@ -110,7 +119,7 @@ define(["d3"], (d3) => {
     _make_interactive(s) {
       let dispatch = this.dispatch;
       this._events.map((event) => {
-        s.on(event, function (d) {console.log(event); d3.event.stopPropagation(); dispatch.call(event, this, d)} );
+        s.on(event, function (d) {d3.event.stopPropagation(); dispatch.call(event, this, d)} );
       });
     }
 
@@ -149,17 +158,17 @@ define(["d3"], (d3) => {
   class Interact {
     constructor(vis) {
       this._vis = vis;
-      this.events = ["select", "deselect", "create"];
+      this.events = ["select", "deselect", "create", "delete"];
       this.dispatch = d3.dispatch(...this.events);
       this.selected = null;
       this._vis.dispatch.on("click.gesture", this._click_closure());
+      this._vis.dispatch.on("keydown.gesture", this._keydown_closure());
     }
 
     _click_closure() {
       let self = this;
       return function (d) {
         if (d3.event.shiftKey) {
-          console.log("shift click!");
           self.dispatch.call("create", this, d);
         }
         else if (is_valid_entity(d)) {
@@ -169,6 +178,16 @@ define(["d3"], (d3) => {
           self.dispatch.call("deselect");
         }
       };
+    }
+
+    _keydown_closure() {
+      let self = this;
+      return function (d) {
+        switch (d3.event.keyCode) {
+          case 8:
+            self.dispatch.call("delete", this, d);
+        }
+      }
     }
 
   }
@@ -304,6 +323,19 @@ define(["d3"], (d3) => {
           }
         }
         vis._graph.add(x);
+        vis.update();
+      });
+    }
+
+    delete_selected_node() {
+      let self = this;
+      let dispatch = this._int.dispatch;
+      let name = "delete_selected_node";
+      let vis = this._int._vis;
+
+      dispatch.on(`delete.${name}`, function (d) {
+        let sd = d3.select(find_selected()).data()[0];
+        vis._graph.remove(sd);
         vis.update();
       });
     }
