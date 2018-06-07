@@ -107,12 +107,22 @@ define(["d3"], (d3) => {
     _process_node_enter(s) {
       let group = s.append("g").attr("class", "node");
       group.append("circle").attr("r", 5);
+      group.append("text")
+        .attr("dy", "1.75em")
+        .text(function (d) {
+          return d.name;
+        })
       return group;
     }
 
     _process_link_enter(s) {
       let group = s.append("g").attr("class","link");
       group.append("line");
+      group.append("text")
+        .attr("dy", "0.35em")
+        .text(function (d) {
+          return d.name;
+        })
       return group;
     }
 
@@ -148,10 +158,21 @@ define(["d3"], (d3) => {
       // update the endpoints of the lines based on their source and end node
       // locations.
       this._links.selectAll("line")
-        .attr("x1", function(d) { return this._graph._nodes[d.source.id].x; }.bind(this))
-        .attr("y1", function(d) { return this._graph._nodes[d.source.id].y; }.bind(this))
-        .attr("x2", function(d) { return this._graph._nodes[d.target.id].x; }.bind(this))
-        .attr("y2", function(d) { return this._graph._nodes[d.target.id].y; }.bind(this));
+        .attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+        // update the link labels. Put them at the midpoint of the link line
+        this._links.selectAll("text")
+          .attr("x", function(d) { return (d.target.x + d.source.x)/2; })
+          .attr("y", function(d) { return (d.target.y + d.source.y)/2; })
+          .attr("transform", function (d) {
+            let rx = this.getAttribute("x");
+            let ry = this.getAttribute("y");
+            let angle = 180/Math.PI*Math.atan((d.target.y - d.source.y) / (d.target.x - d.source.x));
+            return `rotate(${angle}, ${rx}, ${ry})`;
+          });
     }
   }
 
@@ -220,7 +241,7 @@ define(["d3"], (d3) => {
       return "lime";
     }
     else if ("hover" in status) {
-      return "yellow";
+      return "darkorange";
     }
   }
 
@@ -310,16 +331,16 @@ define(["d3"], (d3) => {
 
         if (!sd) {
           console.log("create floating", d);
-          x = {id: uuidv4(), x: c[0], y: c[1]}
+          x = {id: uuidv4(), name: "new", x: c[0], y: c[1]}
         }
         else {
           if (is_node(d) && d !== sd) {
             console.log("create link");
-            x = {id: uuidv4(), source: sd, target: d};
+            x = {id: uuidv4(), name: "new", source: sd, target: d};
           }
           else {
             console.log("create linked node");
-            x = {id: uuidv4(), source: sd, target: {id: uuidv4(), x: c[0], y: c[1]}};
+            x = {id: uuidv4(), name: "new", source: sd, target: {id: uuidv4(), name: "new", x: c[0], y: c[1]}};
           }
         }
         vis._graph.add(x);

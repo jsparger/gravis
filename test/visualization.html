@@ -46,12 +46,12 @@
   <script>
     require(["gravis"], (gravis) => {
 
-      let a = {id: 0};
-      let b = {id: 1};
-      let c = {id: 2};
-      let d = {id: 3};
-      let r = {id: 0, source: a, target: b};
-      let r2 = {id:1, source: a, target: c};
+      let a = {id: 0, name: "A"};
+      let b = {id: 1, name: "B"};
+      let c = {id: 2, name: "C"};
+      let d = {id: 3, name: "D"};
+      let r = {id: 0, source: a, target: b, name: "r"};
+      let r2 = {id:1, source: a, target: c, name: "r2"};
 
       let w = 500; let h = 250;
       graph = new gravis.Graph();
