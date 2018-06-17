@@ -1,0 +1,27 @@
+{
+  "name": "gravis",
+  "version": "0.0.1",
+  "description": "a graph visualization tool",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jsparger/gravis.git"
+  },
+  "author": "John Sparger",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jsparger/gravis/issues"
+  },
+  "homepage": "https://github.com/jsparger/gravis#readme",
+  "dependencies": {
+    "d3": "^5.4.0",
+    "rollup": "^0.60.7",
+    "rollup-plugin-node-resolve": "^3.3.0"
+  }
+}
