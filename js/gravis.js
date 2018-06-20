@@ -57,10 +57,28 @@ define(["d3"], (d3) => {
       this._width = width;
       this._height = height;
       this._sim = d3.forceSimulation()
-        // .velocityDecay(0.1)
-        .force("charge", d3.forceManyBody().strength(-30))
-        .force("link", d3.forceLink().distance(50).strength(1))
+        // .velocityDecay(0.7)
+        .force("charge", d3.forceManyBody().strength((d) => {
+          return d.hidden ? -30: -100;
+        }))
+        // .force("gravity", d3.forceManyBody())
+        .force("link", d3.forceLink())//.distance(25).iterations(5)
+        //   .strength((d) => {
+        //     if (!d.source.l) d.source.l = [];
+        //     if (!d.target.l) d.target.l = [];
+        //     if (d.source.l.includes(d.target) || d.target.l.includes(d.source)) {
+        //       console.log("zero!");
+        //       return 0.0;
+        //     }
+        //     d.source.l.push(d.target);
+        //     d.target.l.push(d.source);
+        //     return 1.0;
+        //   }))
+        // .force("collide", d3.forceCollide(5))
+        // .force("x", d3.forceX(this._width/2))
+        // .force("y", d3.forceY(this._height/2))
         .force("center", d3.forceCenter(this._width/2, this._height/2))
+        // .force("radial", d3.forceRadial(200, 300).strength(1))
         .on("tick", this.tick.bind(this));
       this._events = ["click", "dblclick", "mousedown", "mouseenter", "mouseleave", "mousemove", "mouseover", "mouseout", "mouseup", "keydown"];
       this.dispatch = d3.dispatch(...this._events);
@@ -87,13 +105,34 @@ define(["d3"], (d3) => {
     }
 
     update() {
-      this._update_entities();
-      this.restart_simulation();
+      let [fn, fl, vn, vl] = this._get_nodes_and_links();
+      this._update_entities(vn, vl);
+      this.restart_simulation(fn, fl);
     }
 
-    _update_entities() {
-      this._nodes = this._update_selection(this._nodes, Object.values(this._graph._nodes), this._process_node_enter);
-      this._links = this._update_selection(this._links, Object.values(this._graph._links), this._process_link_enter);
+    _get_nodes_and_links() {
+      let force_nodes = Object.values(this._graph._nodes);
+      let vis_nodes = Object.values(this._graph._nodes);
+      let force_links = [];
+      let vis_links = [];
+      for (let link of Object.values(this._graph._links)) {
+        let middle = {id: uuidv4(), hidden: true};
+        force_nodes.push(middle);
+        // vis_nodes.push(middle);
+        force_links.push({id: uuidv4(), source: link.source, target: middle});
+        force_links.push({id: uuidv4(), source: middle, target: link.target});
+        // vis_links.push({id: uuidv4(), source: link.source, target: middle});
+        // vis_links.push({id: uuidv4(), source: middle, target: link.target});
+        let vis_link = link;
+        vis_link.middle = middle;
+        vis_links.push(vis_link);
+      }
+      return [force_nodes, force_links, vis_nodes, vis_links];
+    }
+
+    _update_entities(nodes, links) {
+      this._nodes = this._update_selection(this._nodes, nodes, this._process_node_enter);
+      this._links = this._update_selection(this._links, links, this._process_link_enter);
     }
 
     _update_selection(s, x, onEnter) {
@@ -117,7 +156,8 @@ define(["d3"], (d3) => {
 
     _process_link_enter(s) {
       let group = s.append("g").attr("class","link");
-      group.append("line");
+      // group.append("line");
+      group.append("path");
       group.append("text")
         .attr("dy", "0.35em")
         .text(function (d) {
@@ -133,10 +173,10 @@ define(["d3"], (d3) => {
       });
     }
 
-    restart_simulation() {
-      this._sim.nodes(Object.values(this._graph._nodes));
-      this._sim.force("link").links(Object.values(this._graph._links));
-      this._sim.alpha(1).restart();
+    restart_simulation(nodes, links) {
+      this._sim.nodes(nodes);
+      this._sim.force("link").links(links);
+      this._sim.alpha(0.3).restart();
     }
 
     tick() {
@@ -157,11 +197,28 @@ define(["d3"], (d3) => {
 
       // update the endpoints of the lines based on their source and end node
       // locations.
-      this._links.selectAll("line")
-        .attr("x1", function(d) { return d.source.x; })
-        .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; });
+      // this._links.selectAll("line")
+      //   .attr("x1", function(d) { return d.source.x; })
+      //   .attr("y1", function(d) { return d.source.y; })
+      //   .attr("x2", function(d) { return d.target.x; })
+      //   .attr("y2", function(d) { return d.target.y; });
+      let line = d3.line()
+        .x(function(d) { return d.x; })
+        .y(function(d) { return d.y; })
+        // .curve(d3.curveCatmullRom.alpha(0.9));
+        .curve(d3.curveCardinal.tension(0.1));
+
+      this._links.selectAll("path")
+      // .attr("d", function (d) {
+      //   return `M${d.source.x},${d.source.y}`
+      //       +  `Q ${d.middle.x},${d.middle.y}`
+      //       +  ` ${d.target.x},${d.target.y}`;
+      // })
+      .attr("d", function (d) {
+        return line([d.source, d.middle, d.target]);
+      })
+      .attr("stroke","black")
+      .attr("fill","none");
 
         // update the link labels. Put them at the midpoint of the link line
         this._links.selectAll("text")
@@ -189,7 +246,7 @@ define(["d3"], (d3) => {
     _click_closure() {
       let self = this;
       return function (d) {
-        if (d3.event.shiftKey) {
+        if (d3.event.ctrlKey) {
           self.dispatch.call("create", this, d);
         }
         else if (is_valid_entity(d)) {
@@ -229,7 +286,7 @@ define(["d3"], (d3) => {
       s.style("fill", color);
     }
     else if (is_relationship(d)) {
-      s.selectAll("line").style("stroke", color);
+      s.selectAll("path").style("stroke", color);
     }
   }
 

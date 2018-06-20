@@ -66,28 +66,42 @@
       act.create_node_on_shift_click();
       act.delete_selected_node();
 
-
-      graph.add(r);
+      let start = {id: 10, name: "start"};
+      let end = {id: 11, name: "end"};
+      let id = 200;
+      let last = null;
+      for (let x of [a,b,c,d]) {
+        graph.add({id: id, source: start, target: x});
+        id = id + 1;
+        graph.add({id: id, source: x, target: end});
+        id = id + 1;
+        if (last) {
+          graph.add({id: id, source: last, target: x});
+          id = id + 1;
+        }
+        last = x;
+      }
+      // graph.add(r);
       vis.update();
 
-      setTimeout(() => {
-        graph.add(r2);
-        graph.add(d);
-        vis.update();
-      }, 1000);
-
-      setTimeout(() => {
-        graph.remove(r2);
-        graph.remove(d);
-        vis.update();
-      }, 2000);
-
-      setTimeout(() => {
-        graph.add(r2);
-        graph.add(d);
-        graph.add({id: 2, source: d, target: c})
-        vis.update();
-      }, 3000);
+      // setTimeout(() => {
+      //   graph.add(r2);
+      //   graph.add(d);
+      //   vis.update();
+      // }, 1000);
+      //
+      // setTimeout(() => {
+      //   graph.remove(r2);
+      //   graph.remove(d);
+      //   vis.update();
+      // }, 2000);
+      //
+      // setTimeout(() => {
+      //   graph.add(r2);
+      //   graph.add(d);
+      //   graph.add({id: 2, source: d, target: c})
+      //   vis.update();
+      // }, 3000);
 
     });
   </script>
