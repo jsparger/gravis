@@ -8,13 +8,13 @@ let r = {id: 0, source: a, target: b, name: "r"};
 let r2 = {id:1, source: a, target: c, name: "r2"};
 
 let w = 500; let h = 250;
-graph = new gravis.Graph();
-vis = new gravis.Vis(graph, w, h);
+let graph = new gravis.Graph();
+let vis = new gravis.Vis(graph, w, h);
 vis.dispatch.on("click.visualize", function (d) {console.log("Got click event in visualization.html", this, d);});
-int = new gravis.Interact(vis);
+let int = new gravis.Interact(vis);
 int.dispatch.on("select.visualize", function (d) {console.log("Got select event in visualization.html", this, d);});
 int.dispatch.on("deselect.visualize", function (d) {console.log("Got deselect event in visualization.html", this, d);});
-act = new gravis.Actions(int);
+let act = new gravis.Actions(int);
 act.highlight_selected_entity();
 act.highlight_hover_entity();
 act.create_node_on_shift_click();

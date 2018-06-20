@@ -189,7 +189,7 @@ class Interact {
   _click_closure() {
     let self = this;
     return function (d) {
-      if (d3.event.shiftKey) {
+      if (d3.event.ctrlKey) {
         self.dispatch.call("create", this, d);
       }
       else if (is_valid_entity(d)) {
@@ -204,9 +204,10 @@ class Interact {
   _keydown_closure() {
     let self = this;
     return function (d) {
-      switch (d3.event.keyCode) {
-        case 8:
-          self.dispatch.call("delete", this, d);
+      let code = d3.event.keyCode;
+      if (code === 8 || code == 46) {
+        // delete on backspace or delete
+        self.dispatch.call("delete", this, d);
       }
     }
   }

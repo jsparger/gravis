@@ -1,4 +1,3 @@
-console.log("about to call test");
 (function () {
   'use strict';
 
@@ -5832,7 +5831,7 @@ console.log("about to call test");
     _click_closure() {
       let self = this;
       return function (d) {
-        if (event.shiftKey) {
+        if (event.ctrlKey) {
           self.dispatch.call("create", this, d);
         }
         else if (is_valid_entity(d)) {
@@ -5847,9 +5846,10 @@ console.log("about to call test");
     _keydown_closure() {
       let self = this;
       return function (d) {
-        switch (event.keyCode) {
-          case 8:
-            self.dispatch.call("delete", this, d);
+        let code = event.keyCode;
+        if (code === 8 || code == 46) {
+          // delete on backspace or delete
+          self.dispatch.call("delete", this, d);
         }
       }
     }
