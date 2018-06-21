@@ -1,9 +1,9 @@
 import node from "rollup-plugin-node-resolve";
 
 export default {
-  entry: "test/visualization.js",
-  format: "iife",
-  moduleName: "test",
+  entry: "index.js",
+  format: "umd",
+  moduleName: "gravis",
   plugins: [node()],
-  dest: "test.js"
+  dest: "dist/gravis.js"
 };

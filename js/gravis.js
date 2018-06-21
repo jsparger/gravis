@@ -179,7 +179,7 @@ class Vis {
 class Interact {
   constructor(vis) {
     this._vis = vis;
-    this.events = ["select", "deselect", "create", "delete"];
+    this.events = ["select", "deselect", "create", "delete", "toggle"];
     this.dispatch = d3.dispatch(...this.events);
     this.selected = null;
     this._vis.dispatch.on("click.gesture", this._click_closure());
@@ -208,6 +208,15 @@ class Interact {
       if (code === 8 || code == 46) {
         // delete on backspace or delete
         self.dispatch.call("delete", this, d);
+      }
+    }
+  }
+
+  _dblclick_closure() {
+    let self = this;
+    return function (d) {
+      if (is_valid_entity(d)) {
+        self.dispatch.call("toggle", this, d);
       }
     }
   }

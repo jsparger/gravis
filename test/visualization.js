@@ -1,5 +1,3 @@
-import * as gravis from "../js/gravis.js";
-
 let a = {id: 0, name: "A"};
 let b = {id: 1, name: "B"};
 let c = {id: 2, name: "C"};
