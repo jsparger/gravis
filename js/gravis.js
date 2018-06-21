@@ -184,6 +184,7 @@ class Interact {
     this.selected = null;
     this._vis.dispatch.on("click.gesture", this._click_closure());
     this._vis.dispatch.on("keydown.gesture", this._keydown_closure());
+    this._vis.dispatch.on("dblclick.gesture", this._dblclick_closure());
   }
 
   _click_closure() {
@@ -193,7 +194,9 @@ class Interact {
         self.dispatch.call("create", this, d);
       }
       else if (is_valid_entity(d)) {
-        self.dispatch.call("select", this, d);
+        if (find_selected() !== this) {
+          self.dispatch.call("select", this, d);
+        }
       }
       else {
         self.dispatch.call("deselect");
@@ -273,7 +276,7 @@ function add_status(element, code, add=true) {
   s.attr("status",JSON.stringify(status));
 }
 
-function find_selected(svg) {
+function find_selected() {
   let selected = null;
   d3.selectAll("[status]").each( function (d) {
     if ("select" in JSON.parse(d3.select(this).attr("status"))) {
@@ -294,7 +297,9 @@ class Actions {
     let selected = null;
 
     dispatch.on(`select.${name}`, function (d) {
-      dispatch.call("deselect");
+      if (selected && selected !== this) {
+        dispatch.call("deselect");
+      }
       add_status(this, "select")
       colorize(this)
       selected = this;

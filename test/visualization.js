@@ -12,6 +12,7 @@ vis.dispatch.on("click.visualize", function (d) {console.log("Got click event in
 let int = new gravis.Interact(vis);
 int.dispatch.on("select.visualize", function (d) {console.log("Got select event in visualization.html", this, d);});
 int.dispatch.on("deselect.visualize", function (d) {console.log("Got deselect event in visualization.html", this, d);});
+int.dispatch.on("toggle.visualize", function(d) {console.log("Got toggle event in visualization.html", this, d);});
 let act = new gravis.Actions(int);
 act.highlight_selected_entity();
 act.highlight_hover_entity();
