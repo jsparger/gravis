@@ -19,7 +19,6 @@ act.highlight_hover_entity();
 act.create_node_on_shift_click();
 act.delete_selected_node();
 
-
 graph.add(r);
 vis.update();
 

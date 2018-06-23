@@ -82,8 +82,16 @@ class Vis {
 
     // create groups in the svg for links and nodes
     // do links first so links will be drawn underneath nodes.
-    this._links = this._svg.append("g").selectAll(".link");
-    this._nodes = this._svg.append("g").selectAll(".node");
+    this._g = this._svg.append("g").attr("class","everything");
+    this._links = this._g.append("g").selectAll(".link");
+    this._nodes = this._g.append("g").selectAll(".node");
+
+    // make zoomable:
+    this._svg.call(
+      d3.zoom().scaleExtent([0.1,3]).on("zoom", () => {
+      this._g.attr("transform", d3.event.transform);
+    }));
+
   }
 
   update() {
@@ -109,6 +117,7 @@ class Vis {
     group.append("circle").attr("r", 5);
     group.append("text")
       .attr("dy", "1.75em")
+      .attr("pointer-events", "none")
       .text(function (d) {
         return d.name;
       })
