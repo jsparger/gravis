@@ -87,10 +87,11 @@ class Vis {
     this._nodes = this._g.append("g").selectAll(".node");
 
     // make zoomable:
-    this._svg.call(
-      d3.zoom().scaleExtent([0.1,3]).on("zoom", () => {
-      this._g.attr("transform", d3.event.transform);
-    }));
+    this._svg
+      .call(d3.zoom().scaleExtent([0.1,3]).on("zoom", () => {
+        this._g.attr("transform", d3.event.transform);
+      }))
+      .on("dblclick.zoom", null);
 
   }
 
@@ -159,8 +160,8 @@ class Vis {
 
     let pad = 10
     this._nodes.attr("transform", function (d) {
-      d.x = bound(d.x, this._width, pad);
-      d.y = bound(d.y, this._height, pad);
+      // d.x = bound(d.x, this._width, pad);
+      // d.y = bound(d.y, this._height, pad);
       return "translate(" + d.x + "," + d.y + ")";
     }.bind(this));
 
