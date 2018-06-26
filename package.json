@@ -21,6 +21,7 @@
   "homepage": "https://github.com/jsparger/gravis#readme",
   "dependencies": {
     "d3": "^5.4.0",
+    "d3-selection-multi": "^1.0.1",
     "rollup": "^0.60.7",
     "rollup-plugin-node-resolve": "^3.3.0"
   }

@@ -1,4 +1,6 @@
 import * as d3 from "d3";
+import "d3-selection-multi";
+
 
 // a valid entity in the graph must not be null and must have an id.
 function is_valid_entity(x) {
@@ -93,6 +95,23 @@ class Vis {
       }))
       .on("dblclick.zoom", null);
 
+    // create arrowhead for links
+    this._svg
+      .append('defs')
+      .append('marker')
+          .attrs({'id':'arrowhead',
+              'viewBox':'-0 -5 10 10',
+              'refX':17,
+              'refY':0,
+              'orient':'auto',
+              'markerWidth':5,
+              'markerHeight':5,
+              'xoverflow':'visible'})
+          .append('svg:path')
+          .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
+          .attr('fill', '#999')
+          .style('stroke','none');
+
   }
 
   update() {
@@ -127,7 +146,9 @@ class Vis {
 
   _process_link_enter(s) {
     let group = s.append("g").attr("class","link");
-    group.append("line");
+    group.append("line")
+    .attr("class", "link")
+            .attr('marker-end','url(#arrowhead)');
     group.append("text")
       .attr("dy", "0.35em")
       .text(function (d) {
